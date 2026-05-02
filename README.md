@@ -2,10 +2,16 @@
 
 HackBot QArm Stack is a 24-hour HackBot project for the Quanser QArm Mini. The project uses camera-based RGB color segmentation and closed-loop visual servoing to detect, track, grasp, and stack colored blocks.
 
-This repository is based on Quanser's official `Quanser_Academic_Resources` codebase. The project contribution is added as a clean top-level demo package under:
+This repository is based on Quanser's official `Quanser_Academic_Resources` codebase. The HackBot project files are placed at the repository root so the demo code is visible immediately on GitHub:
 
 ```text
-hackbot_qarm_stack/
+rgb_detect.py
+rgb_track.py
+rgb_gripper.py
+sequential_rgb_stack.py
+color_utils.py
+pick_helpers.py
+runtime_paths.py
 ```
 
 The Quanser core libraries are not modified. No trained weights, generated caches, IDE files, or hardware logs are included.
@@ -25,13 +31,13 @@ The current implementation is intentionally simple and reviewable. It prioritize
 
 | File | Role |
 |---|---|
-| `hackbot_qarm_stack/rgb_detect.py` | Detect red, green, and blue blocks using HSV masks and contour filtering. |
-| `hackbot_qarm_stack/rgb_track.py` | Track one target color with closed-loop base and shoulder corrections. |
-| `hackbot_qarm_stack/rgb_gripper.py` | Run a rule-based visual grasping state machine. |
-| `hackbot_qarm_stack/sequential_rgb_stack.py` | Pick red, green, and blue blocks in sequence and place them into one stack. |
-| `hackbot_qarm_stack/color_utils.py` | Shared HSV segmentation and largest-blob detection helpers. |
-| `hackbot_qarm_stack/pick_helpers.py` | Shared block placement and stack-height helper functions. |
-| `hackbot_qarm_stack/runtime_paths.py` | Adds the repository-local Quanser Python libraries to `sys.path`. |
+| `rgb_detect.py` | Detect red, green, and blue blocks using HSV masks and contour filtering. |
+| `rgb_track.py` | Track one target color with closed-loop base and shoulder corrections. |
+| `rgb_gripper.py` | Run a rule-based visual grasping state machine. |
+| `sequential_rgb_stack.py` | Pick red, green, and blue blocks in sequence and place them into one stack. |
+| `color_utils.py` | Shared HSV segmentation and largest-blob detection helpers. |
+| `pick_helpers.py` | Shared block placement and stack-height helper functions. |
+| `runtime_paths.py` | Adds the repository-local Quanser Python libraries to `sys.path`. |
 
 ## Method Overview
 
@@ -54,25 +60,25 @@ The scripts use rule-based control by default. `sequential_rgb_stack.py` also su
 Run the perception demo first:
 
 ```powershell
-python hackbot_qarm_stack\rgb_detect.py --camera 1
+python rgb_detect.py --camera 1
 ```
 
 Then test closed-loop tracking:
 
 ```powershell
-python hackbot_qarm_stack\rgb_track.py --camera 1 --arm-id 3 --color red
+python rgb_track.py --camera 1 --arm-id 3 --color red
 ```
 
 Then test one-block grasping:
 
 ```powershell
-python hackbot_qarm_stack\rgb_gripper.py --camera 1 --arm-id 3 --color red
+python rgb_gripper.py --camera 1 --arm-id 3 --color red
 ```
 
 Finally run the sequential stack demo:
 
 ```powershell
-python hackbot_qarm_stack\sequential_rgb_stack.py --camera 1 --arm-id 3
+python sequential_rgb_stack.py --camera 1 --arm-id 3
 ```
 
 Press `ESC` in the OpenCV window to stop a demo.
@@ -82,7 +88,7 @@ Press `ESC` in the OpenCV window to stop a demo.
 The stacking script can use a local compatible policy for tracking or approach:
 
 ```powershell
-python hackbot_qarm_stack\sequential_rgb_stack.py --use-rl-track --model-path model.pt
+python sequential_rgb_stack.py --use-rl-track --model-path model.pt
 ```
 
 If `--use-rl-track` and `--use-rl-approach` are not provided, the script does not load `model.pt`.
@@ -116,4 +122,4 @@ This project is built on top of Quanser's public academic resource repository:
 https://github.com/quanser/Quanser_Academic_Resources
 ```
 
-Quanser's original repository provides the device libraries, examples, and setup resources. This HackBot branch adds a focused top-level QArm Mini vision-grasping demo package.
+Quanser's original repository provides the device libraries, examples, and setup resources. This HackBot branch adds a focused QArm Mini vision-grasping demo at the repository root.
