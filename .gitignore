@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+*.log
+*.bak
+*.pt
+*.pth
+poses.json
+
