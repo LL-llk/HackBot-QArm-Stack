@@ -6,8 +6,18 @@ import sys
 
 def add_quanser_libraries() -> Path:
     """Add the repository's local Quanser Python libraries to sys.path."""
-    repo_root = Path(__file__).resolve().parents[3]
-    library_path = repo_root / "0_libraries" / "python"
+    current_path = Path(__file__).resolve()
+    library_path = None
+
+    for parent in current_path.parents:
+        candidate = parent / "0_libraries" / "python"
+        if candidate.exists():
+            library_path = candidate
+            break
+
+    if library_path is None:
+        library_path = current_path.parents[1] / "0_libraries" / "python"
+
     if library_path.exists():
         library_str = str(library_path)
         if library_str not in sys.path:
@@ -16,4 +26,3 @@ def add_quanser_libraries() -> Path:
 
 
 QUANSER_LIBRARY_PATH = add_quanser_libraries()
-

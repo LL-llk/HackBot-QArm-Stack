@@ -35,25 +35,25 @@ The closed-loop controller uses the target center error for alignment and the co
 Start with perception only:
 
 ```powershell
-python 5_research\qarm_mini\vision_grasping_demos\rgb_detect.py --camera 1
+python hackbot_qarm_stack\rgb_detect.py --camera 1
 ```
 
 Then test visual tracking:
 
 ```powershell
-python 5_research\qarm_mini\vision_grasping_demos\rgb_track.py --camera 1 --arm-id 3 --color red
+python hackbot_qarm_stack\rgb_track.py --camera 1 --arm-id 3 --color red
 ```
 
 Then test one-block grasping:
 
 ```powershell
-python 5_research\qarm_mini\vision_grasping_demos\rgb_gripper.py --camera 1 --arm-id 3 --color red
+python hackbot_qarm_stack\rgb_gripper.py --camera 1 --arm-id 3 --color red
 ```
 
 Finally run sequential stacking:
 
 ```powershell
-python 5_research\qarm_mini\vision_grasping_demos\sequential_rgb_stack.py --camera 1 --arm-id 3
+python hackbot_qarm_stack\sequential_rgb_stack.py --camera 1 --arm-id 3
 ```
 
 Press `ESC` in the OpenCV window to stop a demo.
@@ -63,7 +63,7 @@ Press `ESC` in the OpenCV window to stop a demo.
 `sequential_rgb_stack.py` supports an optional local policy network for tracking or approach correction:
 
 ```powershell
-python 5_research\qarm_mini\vision_grasping_demos\sequential_rgb_stack.py --use-rl-track --model-path model.pt
+python hackbot_qarm_stack\sequential_rgb_stack.py --use-rl-track --model-path model.pt
 ```
 
 The model file is not included in this repository. If RL flags are not enabled, the script uses rule-based control and does not load `model.pt`.
