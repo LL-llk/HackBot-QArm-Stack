@@ -1,63 +1,119 @@
-<img src="docs/images/quanser-resources-header.png" width="100%">
+# HackBot QArm Stack
 
+HackBot QArm Stack is a 24-hour HackBot project for the Quanser QArm Mini. The project uses camera-based RGB color segmentation and closed-loop visual servoing to detect, track, grasp, and stack colored blocks.
 
-# Quanser_Academic_Resources
-The [Quanser](https://www.quanser.com/) Academic Resources includes the research and teaching content for using Quanser products, including libraries, research examples, teaching content, user manuals, guides and more.
+This repository is based on Quanser's official `Quanser_Academic_Resources` codebase. The project contribution is added as a clean QArm Mini demo package under:
 
-This repository includes content for the following products: `Aero 2, Mechatronic Actuators Trainer, Mechatronic Sensors Trainer, QArm, QArm Mini, QBot Platform and older QBots, QCar, QCar 2, QDrone, QDrone 2, Qube-Servo 3`, and looking for resources on these solutions from [Quanser's website](https://www.quanser.com/) will redirect here. If you are looking for resources to other products, skip these instructions and refer to the section [Resources For Older Products](#resources-for-older-products).
+```text
+5_research/qarm_mini/vision_grasping_demos/
+```
 
-### Table of Contents
-- [Downloading Resources](#downloading-resources)
-- [Setting Up Your Computer](#setting-up-your-computer)
-- [Getting Started With Content](#getting-started-with-content)
-- [Resources For Older Products](#resources-for-older-products)
-- [Changelog](changelog.txt)
+The Quanser core libraries are not modified. No trained weights, generated caches, IDE files, or hardware logs are included.
 
+## Project Goal
 
-## Downloading Resources
+The goal is to make the QArm Mini perform a practical vision-guided manipulation pipeline:
 
-**Note:** If you are trying to set up a Raspberry Pi (4 or 5) to use with the Mechatronic Actuators Trainer and/or the Mechatronic Sensors Trainer, skip this guide and see [Raspberry Pi Setup](1_setup/raspberry_pi/pi_setup.pdf). These devices work both in Windows computers and Raspberry Pis.
+1. Detect red, green, and blue blocks from the camera stream.
+2. Track a selected target color with conservative joint updates.
+3. Close the gripper when the block is aligned and inside the grasp window.
+4. Lift and place blocks sequentially into a stack.
 
-Before getting started with these resources, the first step is to download them into your computer. There is two ways to do this, using Git, or downloading the files simply as a .zip file. We recommend having our resources in a `C:/Users/user/Documents/Quanser` folder.
+The current implementation is intentionally simple and reviewable. It prioritizes a working hardware demo over a large learning pipeline.
 
-### With Git
+## What Was Implemented
 
-<details open>
-<summary>Installation using Git</summary>
+| File | Role |
+|---|---|
+| `rgb_detect.py` | Detect red, green, and blue blocks using HSV masks and contour filtering. |
+| `rgb_track.py` | Track one target color with closed-loop base and shoulder corrections. |
+| `rgb_gripper.py` | Run a rule-based visual grasping state machine. |
+| `sequential_rgb_stack.py` | Pick red, green, and blue blocks in sequence and place them into one stack. |
+| `color_utils.py` | Shared HSV segmentation and largest-blob detection helpers. |
+| `pick_helpers.py` | Shared block placement and stack-height helper functions. |
+| `runtime_paths.py` | Adds the repository-local Quanser Python libraries to `sys.path`. |
 
-1. Install [Git](https://git-scm.com/downloads) in your system.
-2. Open your Documents folder and open a windows terminal in that folder.
-3. Run the following command to create the Quanser directory and copy the contents of this repo in there.
-    ```
-    git clone https://github.com/quanser/Quanser_Academic_Resources.git Quanser
-    ```
+## Method Overview
 
-</details>
+The demo follows this pipeline:
 
-### Without Git
+```text
+camera frame
+  -> HSV color mask
+  -> morphology cleanup
+  -> largest contour selection
+  -> target center and area estimate
+  -> closed-loop joint correction
+  -> grasp / lift / place state machine
+```
 
-<details>
-<summary>Installation without Git</summary>
+The scripts use rule-based control by default. `sequential_rgb_stack.py` also supports an optional local RL policy for tracking or approach corrections, but the model file is not included and is not loaded unless an RL flag is explicitly enabled.
 
-1. On your system, create a folder called _Quanser_ under _Documents_. This should look like `C:/Users/user/Documents/Quanser`.
-2. Click the green Code button at the top of this GitHub page, click _Download ZIP_ at the bottom of the menu that pops up.
-3. Unzip the folder in your system.
-4. Go into _Quanser_Academic_Resources-main_ (you see the folders 0_libraries, 1_setup ...). Copy all the contents of that folder into your newly created Documents/Quanser folder.
-</details>
+## Recommended Demo Order
 
-## Setting Up Your Computer
+Run the perception demo first:
 
-To begin using these resources, you will need to install the necessary software to your computer based on your intended method of interfacing with Quanser devices. This may involve working with either virtual and/or hardware systems, and utilizing Python and/or MATLAB/Simulink.
+```powershell
+python 5_research\qarm_mini\vision_grasping_demos\rgb_detect.py --camera 1
+```
 
-- Follow the setup guide: [Computer Setup](docs/pc_setup.md).
+Then test closed-loop tracking:
 
-- Note that if a router was provided as part of your system: please DO NOT connect an internet cable to the router, this may cause unexpected behavior due to automatic router firmware updates.
+```powershell
+python 5_research\qarm_mini\vision_grasping_demos\rgb_track.py --camera 1 --arm-id 3 --color red
+```
 
-## Getting Started With Content
+Then test one-block grasping:
 
-For a comprehensive guide to getting started with these resources and using your Quanser products, follow [Getting Started With Content](6_teaching/README.md). 
+```powershell
+python 5_research\qarm_mini\vision_grasping_demos\rgb_gripper.py --camera 1 --arm-id 3 --color red
+```
 
+Finally run the sequential stack demo:
 
-# Resources For Older Products
+```powershell
+python 5_research\qarm_mini\vision_grasping_demos\sequential_rgb_stack.py --camera 1 --arm-id 3
+```
 
- **_For any other product not listed above, please visit the Quanser Website for [resources](https://www.quanser.com/resources/)._**
+Press `ESC` in the OpenCV window to stop a demo.
+
+## Optional Policy Mode
+
+The stacking script can use a local compatible policy for tracking or approach:
+
+```powershell
+python 5_research\qarm_mini\vision_grasping_demos\sequential_rgb_stack.py --use-rl-track --model-path model.pt
+```
+
+If `--use-rl-track` and `--use-rl-approach` are not provided, the script does not load `model.pt`.
+
+## Hardware Notes
+
+- Default camera device: `--camera 1`
+- Default QArm Mini id: `--arm-id 3`
+- Motion commands are intentionally small for safer first tests.
+- Test perception before enabling arm motion.
+- Keep the workspace clear while testing grasping and stacking.
+
+## Repository Hygiene
+
+This branch only adds the clean HackBot demo files and a small `.gitignore`.
+
+Excluded from the commit:
+
+- trained model weights such as `model.pt`
+- Python caches
+- IDE files
+- generated logs
+- local pose files
+- copied Quanser `hal/` or `pal/` trees
+
+## Attribution
+
+This project is built on top of Quanser's public academic resource repository:
+
+```text
+https://github.com/quanser/Quanser_Academic_Resources
+```
+
+Quanser's original repository provides the device libraries, examples, and setup resources. This HackBot branch adds a focused QArm Mini vision-grasping demo package.
